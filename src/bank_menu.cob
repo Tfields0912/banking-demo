@@ -5,6 +5,7 @@
        WORKING-STORAGE SECTION.
        01 CHOICE PIC X VALUE SPACE.
        01 DONE-FLAG PIC X VALUE "N".
+       01 SYSTEM-COMMAND PIC X(200).
 
        PROCEDURE DIVISION.
        MAIN.
@@ -26,7 +27,8 @@
 
               EVALUATE CHOICE
                  WHEN "1"
-                    DISPLAY "NEED TO ADD"
+                    MOVE "./bin/reset-data" TO SYSTEM-COMMAND
+                    CALL "SYSTEM" USING SYSTEM-COMMAND
                  WHEN "2"
                     DISPLAY "NEED TO ADD"
                  WHEN "3"
