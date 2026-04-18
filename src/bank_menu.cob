@@ -34,7 +34,8 @@
                  WHEN "3"
                     DISPLAY "NEED TO ADD"
                  WHEN "4"
-                    DISPLAY "NEED TO ADD"
+                    MOVE "./bin/account-inquiry" TO SYSTEM-COMMAND
+                    CALL "SYSTEM" USING SYSTEM-COMMAND
                  WHEN "5"
                     DISPLAY "NEED TO ADD"
                  WHEN "6"
