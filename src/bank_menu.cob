@@ -30,7 +30,8 @@
                     MOVE "./bin/reset-data" TO SYSTEM-COMMAND
                     CALL "SYSTEM" USING SYSTEM-COMMAND
                  WHEN "2"
-                    DISPLAY "NEED TO ADD"
+                    MOVE "./bin/create-user" TO SYSTEM-COMMAND
+                    CALL "SYSTEM" USING SYSTEM-COMMAND
                  WHEN "3"
                     DISPLAY "NEED TO ADD"
                  WHEN "4"

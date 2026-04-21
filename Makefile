@@ -5,7 +5,7 @@ SRC_DIR := src
 BIN_DIR := bin
 DATA_DIR := data
 
-PROGRAMS := reset-data account-inquiry bank-menu
+PROGRAMS := reset-data create-user account-inquiry bank-menu
 
 .PHONY: all build clean menu
 
@@ -14,6 +14,10 @@ all: build
 build: $(PROGRAMS:%=$(BIN_DIR)/%)
 
 $(BIN_DIR)/reset-data: $(SRC_DIR)/reset_data.cob
+	@mkdir -p $(BIN_DIR) $(DATA_DIR)
+	$(COBC) $(COBCFLAGS) -o $@ $<
+
+$(BIN_DIR)/create-user: $(SRC_DIR)/create_user.cob
 	@mkdir -p $(BIN_DIR) $(DATA_DIR)
 	$(COBC) $(COBCFLAGS) -o $@ $<
 
@@ -27,6 +31,9 @@ $(BIN_DIR)/bank-menu: $(SRC_DIR)/bank_menu.cob
 
 reset: $(BIN_DIR)/reset-data
 	./$(BIN_DIR)/reset-data
+
+create: $(BIN_DIR)/create-user
+	./$(BIN_DIR)/create-user
 
 inquiry: $(BIN_DIR)/account-inquiry
 	./$(BIN_DIR)/account-inquiry
