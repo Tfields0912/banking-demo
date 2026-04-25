@@ -5,9 +5,9 @@ SRC_DIR := src
 BIN_DIR := bin
 DATA_DIR := data
 
-PROGRAMS := reset-data create-user account-inquiry bank-menu
+PROGRAMS := reset-data create-user create-account account-inquiry bank-menu
 
-.PHONY: all build clean menu
+.PHONY: all build reset clean menu
 
 all: build
 
@@ -21,6 +21,10 @@ $(BIN_DIR)/create-user: $(SRC_DIR)/create_user.cob
 	@mkdir -p $(BIN_DIR) $(DATA_DIR)
 	$(COBC) $(COBCFLAGS) -o $@ $<
 
+$(BIN_DIR)/create-account: $(SRC_DIR)/create_account.cob
+	@mkdir -p $(BIN_DIR) $(DATA_DIR)
+	$(COBC) $(COBCFLAGS) -o $@ $<
+
 $(BIN_DIR)/account-inquiry: $(SRC_DIR)/account_inquiry.cob
 	@mkdir -p $(BIN_DIR) $(DATA_DIR)
 	$(COBC) $(COBCFLAGS) -o $@ $<
@@ -30,15 +34,20 @@ $(BIN_DIR)/bank-menu: $(SRC_DIR)/bank_menu.cob
 	$(COBC) $(COBCFLAGS) -o $@ $<
 
 reset: $(BIN_DIR)/reset-data
-	./$(BIN_DIR)/reset-data
+	@mkdir -p $(DATA_DIR)
+	@test -s $(DATA_DIR)/users.dat || ./$(BIN_DIR)/reset-data
+	@test -s $(DATA_DIR)/accounts.dat || ./$(BIN_DIR)/reset-data
 
 create: $(BIN_DIR)/create-user
 	./$(BIN_DIR)/create-user
 
+create-account: $(BIN_DIR)/create-account
+	./$(BIN_DIR)/create-account
+
 inquiry: $(BIN_DIR)/account-inquiry
 	./$(BIN_DIR)/account-inquiry
 
-menu: build
+menu: build reset
 	./$(BIN_DIR)/bank-menu
 
 clean:

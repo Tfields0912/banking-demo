@@ -33,7 +33,8 @@
                     MOVE "./bin/create-user" TO SYSTEM-COMMAND
                     CALL "SYSTEM" USING SYSTEM-COMMAND
                  WHEN "3"
-                    DISPLAY "NEED TO ADD"
+                    MOVE "./bin/create-account" TO SYSTEM-COMMAND
+                    CALL "SYSTEM" USING SYSTEM-COMMAND
                  WHEN "4"
                     MOVE "./bin/account-inquiry" TO SYSTEM-COMMAND
                     CALL "SYSTEM" USING SYSTEM-COMMAND
