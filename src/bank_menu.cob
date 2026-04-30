@@ -39,7 +39,8 @@
                     MOVE "./bin/account-inquiry" TO SYSTEM-COMMAND
                     CALL "SYSTEM" USING SYSTEM-COMMAND
                  WHEN "5"
-                    DISPLAY "NEED TO ADD"
+                    MOVE "./bin/withdraw-deposit" TO SYSTEM-COMMAND
+                    CALL "SYSTEM" USING SYSTEM-COMMAND
                  WHEN "6"
                     DISPLAY "NEED TO ADD"
                  WHEN "7"
