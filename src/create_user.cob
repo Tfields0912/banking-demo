@@ -5,9 +5,9 @@
        INPUT-OUTPUT SECTION.
        FILE-CONTROL.
            SELECT USERS-IN ASSIGN TO "data/users.dat"
-           ORGANIZATION IS LINE SEQUENTIAL.
+              ORGANIZATION IS LINE SEQUENTIAL.
            SELECT USERS-OUT ASSIGN TO "data/users.tmp"
-           ORGANIZATION IS LINE SEQUENTIAL.
+              ORGANIZATION IS LINE SEQUENTIAL.
 
        DATA DIVISION.
        FILE SECTION.
@@ -36,7 +36,6 @@
 
        PROCEDURE DIVISION.
        MAIN.
-           DISPLAY SPACE
            DISPLAY "CREATE USER"
            DISPLAY "-----------"
            DISPLAY SPACE
@@ -71,9 +70,9 @@
            PERFORM CREATE-USER-RECORD
 
            IF USER-EXISTS-FLAG = "Y"
-               DISPLAY "USER ID ALREADY EXISTS."
+              DISPLAY "USER ID ALREADY EXISTS."
            ELSE
-               DISPLAY "USER CREATED."
+              DISPLAY "USER CREATED."
            END-IF
            STOP RUN.
 
@@ -85,22 +84,22 @@
            PERFORM UNTIL USERS-EOF-FLAG = "Y"
            READ USERS-IN
            AT END
-               MOVE "Y" TO USERS-EOF-FLAG
+              MOVE "Y" TO USERS-EOF-FLAG
            NOT AT END
-               UNSTRING USERS-IN-RECORD DELIMITED BY ","
-               INTO USER-ID
-               END-UNSTRING
-               IF FUNCTION TRIM(USER-ID) = NEW-USER-ID
-                   MOVE "Y" TO USER-EXISTS-FLAG
-               END-IF
-               MOVE USERS-IN-RECORD TO USERS-OUT-RECORD
-               WRITE USERS-OUT-RECORD
+              UNSTRING USERS-IN-RECORD DELIMITED BY ","
+              INTO USER-ID
+              END-UNSTRING
+              IF FUNCTION TRIM(USER-ID) = NEW-USER-ID
+                 MOVE "Y" TO USER-EXISTS-FLAG
+              END-IF
+              MOVE USERS-IN-RECORD TO USERS-OUT-RECORD
+              WRITE USERS-OUT-RECORD
            END-READ
            END-PERFORM
 
            IF USER-EXISTS-FLAG NOT = "Y"
-               PERFORM BUILD-USER-OUT-RECORD
-               WRITE USERS-OUT-RECORD
+              PERFORM BUILD-USER-OUT-RECORD
+              WRITE USERS-OUT-RECORD
            END-IF
 
            CLOSE USERS-IN
@@ -120,43 +119,43 @@
            MOVE FUNCTION TRIM(NEW-USER-PHONE) TO NEW-USER-PHONE
 
            IF NEW-USER-ID = SPACES
-               DISPLAY "ID IS REQUIRED."
-               STOP RUN
+              DISPLAY "ID IS REQUIRED."
+              STOP RUN
            END-IF
 
            IF NEW-USER-NAME = SPACES
-               DISPLAY "NAME IS REQUIRED."
-               STOP RUN
+              DISPLAY "NAME IS REQUIRED."
+              STOP RUN
            END-IF
 
            IF NEW-USER-ADDRESS = SPACES
-               DISPLAY "ADDRESS IS REQUIRED."
-               STOP RUN
+              DISPLAY "ADDRESS IS REQUIRED."
+              STOP RUN
            END-IF
 
            IF NEW-USER-CITY = SPACES
-               DISPLAY "CITY IS REQUIRED."
-               STOP RUN
+              DISPLAY "CITY IS REQUIRED."
+              STOP RUN
            END-IF
 
            IF NEW-USER-STATE = SPACES
-               DISPLAY "STATE IS REQUIRED."
-               STOP RUN
+              DISPLAY "STATE IS REQUIRED."
+              STOP RUN
            END-IF
 
            IF NEW-USER-ZIPCODE = SPACES
-               DISPLAY "ZIPCODE IS REQUIRED."
-               STOP RUN
+              DISPLAY "ZIPCODE IS REQUIRED."
+              STOP RUN
            END-IF
 
            IF NEW-USER-DOB = SPACES
-               DISPLAY "DATE OF BIRTH IS REQUIRED."
-               STOP RUN
+              DISPLAY "DATE OF BIRTH IS REQUIRED."
+              STOP RUN
            END-IF
 
            IF NEW-USER-PHONE = SPACES
-               DISPLAY "PHONE NUMBER IS REQUIRED."
-               STOP RUN
+              DISPLAY "PHONE NUMBER IS REQUIRED."
+              STOP RUN
            END-IF.
 
        BUILD-USER-OUT-RECORD.

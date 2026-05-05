@@ -1,0 +1,129 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. TRANSACTION-HISTORY.
+
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT TRANSACTIONS-FILE ASSIGN TO "data/transactions.dat"
+              ORGANIZATION IS LINE SEQUENTIAL.
+
+       DATA DIVISION.
+       FILE SECTION.
+       FD TRANSACTIONS-FILE.
+       01 TRANSACTIONS-RECORD PIC X(160).
+
+       WORKING-STORAGE SECTION.
+       01 EOF-FLAG PIC X VALUE "N".
+       01 FOUND-FLAG PIC X VALUE "N".
+
+       01 TARGET-ID PIC X(10).
+
+       01 TRANS-TS PIC X(20).
+       01 TRANS-ID PIC X(10).
+       01 TRANS-TYPE PIC X.
+       01 TRANS-AMOUNT PIC X(12).
+       01 TRANS-BALANCE PIC X(12).
+       01 TRANS-DESCRIPTION PIC X(40).
+
+       01 DISPLAY-TS PIC X(21).
+       01 RAW-DATE PIC X(8).
+       01 RAW-TIME PIC X(6).
+       01 HOUR-24 PIC 99.
+       01 HOUR-12 PIC 99.
+       01 HOUR-12-OUT PIC Z9.
+       01 MINUTE-STR PIC X(2).
+       01 SECOND-STR PIC X(2).
+       01 AMPM PIC X(2).
+
+       PROCEDURE DIVISION.
+       MAIN.
+           DISPLAY "ENTER ACCOUNT ID: " WITH NO ADVANCING
+           ACCEPT TARGET-ID
+           MOVE FUNCTION TRIM(TARGET-ID) TO TARGET-ID
+           DISPLAY SPACE
+
+           IF TARGET-ID = SPACES
+              DISPLAY "ACCOUNT ID IS REQUIRED."
+              STOP RUN
+           END-IF
+
+           DISPLAY "TRANSACTION HISTORY"
+
+           OPEN INPUT TRANSACTIONS-FILE
+
+           PERFORM UNTIL EOF-FLAG = "Y"
+           READ TRANSACTIONS-FILE
+           AT END
+           MOVE "Y" TO EOF-FLAG
+           NOT AT END
+           PERFORM PARSE-TRANS
+           IF FUNCTION TRIM(TRANS-ID) = FUNCTION TRIM(TARGET-ID)
+              MOVE "Y" TO FOUND-FLAG
+              PERFORM FORMAT-TRANS-TIMESTAMP
+              DISPLAY "-----------------------------------"
+              DISPLAY "TIMESTAMP:     " FUNCTION TRIM(DISPLAY-TS)
+              DISPLAY "TYPE:          " FUNCTION TRIM(TRANS-TYPE)
+              DISPLAY "AMOUNT:        $" FUNCTION TRIM(TRANS-AMOUNT)
+              DISPLAY "BALANCE:       $" FUNCTION TRIM(TRANS-BALANCE)
+              DISPLAY "DESCRIPTION:   " FUNCTION TRIM(TRANS-DESCRIPTION)
+           END-IF
+           END-READ
+           END-PERFORM
+
+           CLOSE TRANSACTIONS-FILE
+
+           IF FOUND-FLAG NOT = "Y"
+              DISPLAY "NO TRANSACTIONS FOUND."
+           END-IF
+
+           STOP RUN.
+
+       PARSE-TRANS.
+           MOVE SPACES TO TRANS-TS TRANS-ID TRANS-TYPE TRANS-AMOUNT
+               TRANS-BALANCE TRANS-DESCRIPTION
+           UNSTRING TRANSACTIONS-RECORD DELIMITED BY ","
+           INTO TRANS-TS TRANS-ID TRANS-TYPE TRANS-AMOUNT
+               TRANS-BALANCE TRANS-DESCRIPTION
+           END-UNSTRING.
+
+       FORMAT-TRANS-TIMESTAMP.
+           MOVE SPACES TO DISPLAY-TS
+           MOVE TRANS-TS(1:8) TO RAW-DATE
+           MOVE TRANS-TS(10:6) TO RAW-TIME
+
+           MOVE RAW-TIME(1:2) TO HOUR-24
+           MOVE RAW-TIME(3:2) TO MINUTE-STR
+           MOVE RAW-TIME(5:2) TO SECOND-STR
+
+           IF HOUR-24 >= 12
+              MOVE "PM" TO AMPM
+           ELSE
+              MOVE "AM" TO AMPM
+           END-IF
+
+           IF HOUR-24 = 0
+              MOVE 12 TO HOUR-12
+           ELSE
+              IF HOUR-24 > 12
+                 COMPUTE HOUR-12 = HOUR-24 - 12
+              ELSE
+                 MOVE HOUR-24 TO HOUR-12
+              END-IF
+           END-IF
+
+           MOVE HOUR-12 TO HOUR-12-OUT
+           STRING
+           RAW-DATE(5:2) DELIMITED BY SIZE
+           "-" DELIMITED BY SIZE
+           RAW-DATE(7:2) DELIMITED BY SIZE
+           "-" DELIMITED BY SIZE
+           RAW-DATE(1:4) DELIMITED BY SIZE
+           " " DELIMITED BY SIZE
+           FUNCTION TRIM(HOUR-12-OUT) DELIMITED BY SIZE
+           ":" DELIMITED BY SIZE
+           MINUTE-STR DELIMITED BY SIZE
+           ":" DELIMITED BY SIZE
+           SECOND-STR DELIMITED BY SIZE
+           AMPM DELIMITED BY SIZE
+           INTO DISPLAY-TS
+           END-STRING.

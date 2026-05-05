@@ -5,9 +5,9 @@
        INPUT-OUTPUT SECTION.
        FILE-CONTROL.
            SELECT USERS-FILE ASSIGN TO "data/users.dat"
-               ORGANIZATION IS LINE SEQUENTIAL.
+              ORGANIZATION IS LINE SEQUENTIAL.
            SELECT ACCOUNTS-FILE ASSIGN TO "data/accounts.dat"
-               ORGANIZATION IS LINE SEQUENTIAL.
+              ORGANIZATION IS LINE SEQUENTIAL.
 
        DATA DIVISION.
        FILE SECTION.
@@ -21,6 +21,8 @@
        01 EOF-FLAG PIC X VALUE "N".
        01 USER-FOUND-FLAG PIC X VALUE "N".
        01 LIST-FOUND-FLAG PIC X VALUE "N".
+       01 TRANS-CHOICE PIC X VALUE SPACE.
+       01 SYSTEM-COMMAND PIC X(200).
 
        01 TARGET-USER-ID PIC X(10).
 
@@ -51,8 +53,8 @@
            MOVE FUNCTION TRIM(TARGET-USER-ID) TO TARGET-USER-ID
 
            IF TARGET-USER-ID = SPACES
-               DISPLAY "USER ID IS REQUIRED."
-               STOP RUN
+              DISPLAY "USER ID IS REQUIRED."
+              STOP RUN
            END-IF
 
            DISPLAY SPACE
@@ -64,6 +66,19 @@
            DISPLAY "ACCOUNT INFORMATION"
            DISPLAY "-------------------"
            PERFORM LIST-USER-ACCOUNTS
+
+           IF USER-FOUND-FLAG = "Y"
+              DISPLAY SPACE
+              DISPLAY "VIEW TRANSACTION HISTORY? (Y/N): " 
+                 WITH NO ADVANCING
+              ACCEPT TRANS-CHOICE
+              MOVE FUNCTION UPPER-CASE(TRANS-CHOICE) TO TRANS-CHOICE
+
+              IF TRANS-CHOICE = "Y"
+                MOVE "./bin/transaction-history" TO SYSTEM-COMMAND
+                CALL "SYSTEM" USING SYSTEM-COMMAND
+              END-IF
+           END-IF
 
            STOP RUN.
 
@@ -79,7 +94,7 @@
               MOVE SPACES TO USER-ID USER-NAME USER-ADDRESS USER-CITY
               MOVE SPACES TO USER-STATE USER-ZIPCODE USER-DOB USER-PHONE
               UNSTRING USERS-RECORD DELIMITED BY ","
-              INTO USER-ID USER-NAME USER-ADDRESS USER-CITY
+                 INTO USER-ID USER-NAME USER-ADDRESS USER-CITY
                  USER-STATE USER-ZIPCODE USER-DOB USER-PHONE
               END-UNSTRING
               IF FUNCTION TRIM(USER-ID) = TARGET-USER-ID
@@ -100,8 +115,8 @@
            CLOSE USERS-FILE
 
            IF USER-FOUND-FLAG NOT = "Y"
-               DISPLAY "USER ID: " TARGET-USER-ID
-               DISPLAY "NAME:    USER NOT FOUND"
+              DISPLAY "USER ID: " TARGET-USER-ID
+              DISPLAY "NAME:    USER NOT FOUND"
            END-IF.
 
        LIST-USER-ACCOUNTS.
@@ -139,13 +154,13 @@
            CLOSE ACCOUNTS-FILE
 
            IF LIST-FOUND-FLAG NOT = "Y"
-               DISPLAY "NO ACCOUNTS FOUND FOR USER."
+              DISPLAY "NO ACCOUNTS FOUND FOR USER."
            END-IF.
 
        PARSE-ACCOUNT.
            MOVE SPACES TO ACCOUNT-ID USER-ID BALANCE-STR STATUS-STR
-               ACCOUNT-TYPE-STR
+              ACCOUNT-TYPE-STR
            UNSTRING ACCOUNTS-RECORD DELIMITED BY ","
-               INTO ACCOUNT-ID USER-ID BALANCE-STR STATUS-STR
-                   ACCOUNT-TYPE-STR
+              INTO ACCOUNT-ID USER-ID BALANCE-STR STATUS-STR
+                 ACCOUNT-TYPE-STR
            END-UNSTRING.

@@ -18,12 +18,12 @@
               DISPLAY "3) CREATE ACCOUNT"
               DISPLAY "4) ACCOUNT INQUIRY"
               DISPLAY "5) WITHDRAW/DEPOSIT"
-              DISPLAY "6) LIST TRANSACTIONS"
-              DISPLAY "7) CLOSE ACCOUNT"
-              DISPLAY "8) EXIT"
+              DISPLAY "6) CLOSE ACCOUNT"
+              DISPLAY "7) EXIT"
               DISPLAY SPACE
               DISPLAY "SELECT OPTION: " WITH NO ADVANCING
               ACCEPT CHOICE
+              DISPLAY SPACE
 
               EVALUATE CHOICE
                  WHEN "1"
@@ -44,8 +44,6 @@
                  WHEN "6"
                     DISPLAY "NEED TO ADD"
                  WHEN "7"
-                    DISPLAY "NEED TO ADD"
-                 WHEN "8"
                     MOVE "Y" TO DONE-FLAG
                  WHEN OTHER
                     DISPLAY "INVALID OPTION."
