@@ -1,5 +1,5 @@
        IDENTIFICATION DIVISION.
-       PROGRAM-ID. POST-TRANSACTION.
+       PROGRAM-ID. WITHDRAW-DEPOSIT.
 
        ENVIRONMENT DIVISION.
        INPUT-OUTPUT SECTION.
@@ -26,6 +26,9 @@
        01 EOF-FLAG PIC X VALUE "N".
        01 FOUND-FLAG PIC X VALUE "N".
        01 ERROR-FLAG PIC X VALUE "N".
+       01 INVALID-ENTRY-FLAG PIC X VALUE "N".
+       01 CLOSED-ACCOUNT-FLAG PIC X VALUE "N".
+       01 SKIP-FLAG PIC X VALUE "N".
 
        01 TARGET-ID PIC X(10).
        01 TRANS-TYPE PIC X.
@@ -49,7 +52,7 @@
        01 TIME-HHMMSSCC PIC X(8).
 
        01 SYSTEM-COMMAND PIC X(200).
-       01 SKIP-FLAG PIC X VALUE "N".
+       
 
        PROCEDURE DIVISION.
        MAIN.
@@ -106,6 +109,7 @@
 
        SAVE-TRANSACTION.
            MOVE "N" TO EOF-FLAG FOUND-FLAG ERROR-FLAG
+              INVALID-ENTRY-FLAG CLOSED-ACCOUNT-FLAG SKIP-FLAG
            OPEN INPUT ACCOUNTS-IN
            OPEN OUTPUT ACCOUNTS-OUT
 
@@ -125,6 +129,20 @@
               MOVE "rm -f data/accounts.tmp" TO SYSTEM-COMMAND
               CALL "SYSTEM" USING SYSTEM-COMMAND
               DISPLAY "ACCOUNT NOT FOUND."
+              STOP RUN
+           END-IF
+
+           IF INVALID-ENTRY-FLAG = "Y"
+              MOVE "rm -f data/accounts.tmp" TO SYSTEM-COMMAND
+              CALL "SYSTEM" USING SYSTEM-COMMAND
+              DISPLAY "ACCOUNT ENTRY IS INVALID."
+              STOP RUN
+           END-IF
+
+           IF CLOSED-ACCOUNT-FLAG = "Y"
+              MOVE "rm -f data/accounts.tmp" TO SYSTEM-COMMAND
+              CALL "SYSTEM" USING SYSTEM-COMMAND
+              DISPLAY "ACCOUNT IS CLOSED."
               STOP RUN
            END-IF
 
@@ -178,11 +196,42 @@
               ACCOUNT-TYPE-STR
            END-UNSTRING
 
-           IF FUNCTION TRIM(ACCOUNT-ID) NOT = FUNCTION TRIM(TARGET-ID)
+           IF FUNCTION TRIM(ACCOUNT-ID) NOT = TARGET-ID
               MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
               WRITE ACCOUNTS-OUT-RECORD
            ELSE
               MOVE "Y" TO FOUND-FLAG
+
+              IF FUNCTION TEST-NUMVAL(BALANCE-STR) NOT = 0
+                 MOVE "Y" TO INVALID-ENTRY-FLAG
+                 MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
+                 WRITE ACCOUNTS-OUT-RECORD
+                 EXIT PARAGRAPH
+              END-IF
+
+              IF FUNCTION TRIM(STATUS-STR) NOT = "OPEN"
+                 AND FUNCTION TRIM(STATUS-STR) NOT = "CLOSED"
+                 MOVE "Y" TO INVALID-ENTRY-FLAG
+                 MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
+                 WRITE ACCOUNTS-OUT-RECORD
+                 EXIT PARAGRAPH
+              END-IF
+
+              IF FUNCTION TRIM(STATUS-STR) = "CLOSED"
+                 MOVE "Y" TO CLOSED-ACCOUNT-FLAG
+                 MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
+                 WRITE ACCOUNTS-OUT-RECORD
+                 EXIT PARAGRAPH
+              END-IF
+
+              IF FUNCTION TRIM(ACCOUNT-TYPE-STR) NOT = "CHECKING"
+                 AND FUNCTION TRIM(ACCOUNT-TYPE-STR) NOT = "SAVINGS"
+                 MOVE "Y" TO INVALID-ENTRY-FLAG
+                 MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
+                 WRITE ACCOUNTS-OUT-RECORD
+                 EXIT PARAGRAPH
+              END-IF
+
               PERFORM COMPUTE-NEW-BALANCE
            END-IF.
 
@@ -221,3 +270,4 @@
               END-STRING
               WRITE ACCOUNTS-OUT-RECORD
            END-IF.
+

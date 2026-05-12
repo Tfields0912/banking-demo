@@ -57,7 +57,7 @@
            MOVE "Y" TO EOF-FLAG
            NOT AT END
            PERFORM PARSE-TRANS
-           IF FUNCTION TRIM(TRANS-ID) = FUNCTION TRIM(TARGET-ID)
+           IF FUNCTION TRIM(TRANS-ID) = TARGET-ID
               MOVE "Y" TO FOUND-FLAG
               PERFORM FORMAT-TRANS-TIMESTAMP
               DISPLAY "-----------------------------------"

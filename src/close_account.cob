@@ -1,0 +1,192 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. CLOSE-ACCOUNT.
+
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT ACCOUNTS-IN ASSIGN TO "data/accounts.dat"
+              ORGANIZATION IS LINE SEQUENTIAL.
+           SELECT ACCOUNTS-OUT ASSIGN TO "data/accounts.tmp"
+              ORGANIZATION IS LINE SEQUENTIAL.
+           SELECT TRANSACTIONS-FILE ASSIGN TO "data/transactions.dat"
+              ORGANIZATION IS LINE SEQUENTIAL.
+
+       DATA DIVISION.
+       FILE SECTION.
+       FD ACCOUNTS-IN.
+       01 ACCOUNTS-IN-RECORD PIC X(120).
+
+       FD ACCOUNTS-OUT.
+       01 ACCOUNTS-OUT-RECORD PIC X(120).
+
+       FD TRANSACTIONS-FILE.
+       01 TRANSACTIONS-RECORD PIC X(160).
+
+       WORKING-STORAGE SECTION.
+       01 EOF-FLAG PIC X VALUE "N".
+       01 FOUND-FLAG PIC X VALUE "N".
+       01 NOT-ZERO-FLAG PIC X VALUE "N".
+       01 ALREADY-CLOSED-FLAG PIC X VALUE "N".
+       01 INVALID-ENTRY-FLAG PIC X VALUE "N".
+
+       01 TARGET-ID PIC X(10).
+
+       01 ACCOUNT-ID PIC X(10).
+       01 USER-ID PIC X(10).
+       01 BALANCE-STR PIC X(12).
+       01 STATUS-STR PIC X(10).
+       01 ACCOUNT-TYPE-STR PIC X(10).
+       01 BALANCE-NUM PIC S9(9)V99 VALUE 0.
+       01 BALANCE-OUT PIC Z(9)9.99.
+
+       01 DATE-YYYYMMDD PIC X(8).
+       01 TIME-HHMMSSCC PIC X(8).
+       01 CLOSE-TRANS-DESC PIC X(40).
+       01 CLOSE-TRANS-TYPE PIC X.
+
+       01 SYSTEM-COMMAND PIC X(200).
+
+       PROCEDURE DIVISION.
+       MAIN.
+           DISPLAY "ENTER ACCOUNT ID: " WITH NO ADVANCING
+           ACCEPT TARGET-ID
+           MOVE FUNCTION TRIM(TARGET-ID) TO TARGET-ID
+
+            IF TARGET-ID = SPACES
+              DISPLAY "ACCOUNT ID IS REQUIRED."
+              STOP RUN
+            END-IF
+
+           OPEN INPUT ACCOUNTS-IN
+           OPEN OUTPUT ACCOUNTS-OUT
+
+           PERFORM UNTIL EOF-FLAG = "Y"
+           READ ACCOUNTS-IN
+           AT END
+           MOVE "Y" TO EOF-FLAG
+           NOT AT END
+           PERFORM PROCESS-ACCOUNT
+           END-READ
+           END-PERFORM
+
+           CLOSE ACCOUNTS-IN
+           CLOSE ACCOUNTS-OUT
+
+           IF FOUND-FLAG = "Y"
+              IF ALREADY-CLOSED-FLAG = "Y"
+                 MOVE "rm -f data/accounts.tmp" TO SYSTEM-COMMAND
+                 CALL "SYSTEM" USING SYSTEM-COMMAND
+                 DISPLAY "ACCOUNT IS ALREADY CLOSED."
+              ELSE IF INVALID-ENTRY-FLAG = "Y"
+                 MOVE "rm -f data/accounts.tmp" TO SYSTEM-COMMAND
+                 CALL "SYSTEM" USING SYSTEM-COMMAND
+                 DISPLAY "ACCOUNT ENTRY IS INVALID."
+              ELSE IF NOT-ZERO-FLAG = "Y"
+                 MOVE "rm -f data/accounts.tmp" TO SYSTEM-COMMAND
+                 CALL "SYSTEM" USING SYSTEM-COMMAND
+                 DISPLAY "ACCOUNT BALANCE MUST BE ZERO."
+              ELSE
+                 MOVE "mv -f data/accounts.tmp data/accounts.dat"
+                    TO SYSTEM-COMMAND
+                 CALL "SYSTEM" USING SYSTEM-COMMAND
+                 OPEN EXTEND TRANSACTIONS-FILE
+                 ACCEPT DATE-YYYYMMDD FROM DATE YYYYMMDD
+                 ACCEPT TIME-HHMMSSCC FROM TIME
+                 MOVE "C" TO CLOSE-TRANS-TYPE
+                 MOVE "ACCOUNT CLOSED" TO CLOSE-TRANS-DESC
+                 MOVE SPACES TO TRANSACTIONS-RECORD
+                 STRING
+                 DATE-YYYYMMDD DELIMITED BY SIZE
+                 "-" DELIMITED BY SIZE
+                 TIME-HHMMSSCC(1:6) DELIMITED BY SIZE
+                 "," DELIMITED BY SIZE
+                 FUNCTION TRIM(TARGET-ID) DELIMITED BY SIZE
+                 "," DELIMITED BY SIZE
+                 CLOSE-TRANS-TYPE DELIMITED BY SIZE
+                 "," DELIMITED BY SIZE
+                 "0.00" DELIMITED BY SIZE
+                 "," DELIMITED BY SIZE
+                 "0.00" DELIMITED BY SIZE
+                 "," DELIMITED BY SIZE
+                 FUNCTION TRIM(CLOSE-TRANS-DESC) DELIMITED BY SIZE
+                 INTO TRANSACTIONS-RECORD
+                 END-STRING
+                 WRITE TRANSACTIONS-RECORD
+                 CLOSE TRANSACTIONS-FILE
+                 DISPLAY "ACCOUNT CLOSED."
+              END-IF
+           ELSE
+              MOVE "rm -f data/accounts.tmp" TO SYSTEM-COMMAND
+              CALL "SYSTEM" USING SYSTEM-COMMAND
+              DISPLAY "ACCOUNT NOT FOUND."
+           END-IF
+
+           STOP RUN.
+
+       PROCESS-ACCOUNT.
+           MOVE SPACES TO ACCOUNT-ID USER-ID BALANCE-STR STATUS-STR
+              ACCOUNT-TYPE-STR
+           UNSTRING ACCOUNTS-IN-RECORD DELIMITED BY ","
+           INTO ACCOUNT-ID USER-ID BALANCE-STR STATUS-STR
+              ACCOUNT-TYPE-STR
+           END-UNSTRING
+
+           IF FUNCTION TRIM(ACCOUNT-ID) = TARGET-ID
+              MOVE "Y" TO FOUND-FLAG
+
+              IF FUNCTION TEST-NUMVAL(BALANCE-STR) NOT = 0
+                 MOVE "Y" TO INVALID-ENTRY-FLAG
+                 MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
+                 WRITE ACCOUNTS-OUT-RECORD
+                 EXIT PARAGRAPH
+              END-IF
+
+              IF FUNCTION TRIM(STATUS-STR) NOT = "OPEN"
+                 AND FUNCTION TRIM(STATUS-STR) NOT = "CLOSED"
+                 MOVE "Y" TO INVALID-ENTRY-FLAG
+                 MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
+                 WRITE ACCOUNTS-OUT-RECORD
+                 EXIT PARAGRAPH
+              END-IF
+
+              IF FUNCTION TRIM(ACCOUNT-TYPE-STR) NOT = "CHECKING"
+                 AND FUNCTION TRIM(ACCOUNT-TYPE-STR) NOT = "SAVINGS"
+                 MOVE "Y" TO INVALID-ENTRY-FLAG
+                 MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
+                 WRITE ACCOUNTS-OUT-RECORD
+                 EXIT PARAGRAPH
+              END-IF
+
+              IF FUNCTION TRIM(STATUS-STR) = "CLOSED"
+                 MOVE "Y" TO ALREADY-CLOSED-FLAG
+                 MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
+                 WRITE ACCOUNTS-OUT-RECORD
+                 EXIT PARAGRAPH
+              END-IF
+
+              MOVE FUNCTION NUMVAL(BALANCE-STR) TO BALANCE-NUM
+              IF BALANCE-NUM NOT = 0
+                 MOVE "Y" TO NOT-ZERO-FLAG
+                 MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
+                 WRITE ACCOUNTS-OUT-RECORD
+              ELSE
+                 MOVE BALANCE-NUM TO BALANCE-OUT
+                 MOVE SPACES TO ACCOUNTS-OUT-RECORD
+                 STRING
+                 FUNCTION TRIM(ACCOUNT-ID) DELIMITED BY SIZE
+                 "," DELIMITED BY SIZE
+                 FUNCTION TRIM(USER-ID) DELIMITED BY SIZE
+                 "," DELIMITED BY SIZE
+                 FUNCTION TRIM(BALANCE-OUT) DELIMITED BY SIZE
+                 "," DELIMITED BY SIZE
+                 "CLOSED" DELIMITED BY SIZE
+                 "," DELIMITED BY SIZE
+                 FUNCTION TRIM(ACCOUNT-TYPE-STR) DELIMITED BY SIZE
+                 INTO ACCOUNTS-OUT-RECORD
+                 END-STRING
+                 WRITE ACCOUNTS-OUT-RECORD
+              END-IF
+           ELSE
+              MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
+              WRITE ACCOUNTS-OUT-RECORD
+           END-IF.

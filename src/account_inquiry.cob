@@ -69,7 +69,7 @@
 
            IF USER-FOUND-FLAG = "Y"
               DISPLAY SPACE
-              DISPLAY "VIEW TRANSACTION HISTORY? (Y/N): " 
+              DISPLAY "VIEW TRANSACTION HISTORY? (Y/N): "
                  WITH NO ADVANCING
               ACCEPT TRANS-CHOICE
               MOVE FUNCTION UPPER-CASE(TRANS-CHOICE) TO TRANS-CHOICE

@@ -5,9 +5,9 @@ SRC_DIR := src
 BIN_DIR := bin
 DATA_DIR := data
 
-PROGRAMS := reset-data create-user create-account account-inquiry withdraw-deposit transaction-history bank-menu
+PROGRAMS := reset-data create-user open-account account-inquiry withdraw-deposit transaction-history close-account bank-menu
 
-.PHONY: all build reset clean menu create-user create-account account-inquiry withdraw-deposit transaction-history
+.PHONY: all build reset clean menu create-user open-account account-inquiry withdraw-deposit transaction-history close-account bank-menu
 
 all: build
 
@@ -21,7 +21,7 @@ $(BIN_DIR)/create-user: $(SRC_DIR)/create_user.cob
 	@mkdir -p $(BIN_DIR) $(DATA_DIR)
 	$(COBC) $(COBCFLAGS) -o $@ $<
 
-$(BIN_DIR)/create-account: $(SRC_DIR)/create_account.cob
+$(BIN_DIR)/open-account: $(SRC_DIR)/open_account.cob
 	@mkdir -p $(BIN_DIR) $(DATA_DIR)
 	$(COBC) $(COBCFLAGS) -o $@ $<
 
@@ -34,6 +34,10 @@ $(BIN_DIR)/withdraw-deposit: $(SRC_DIR)/withdraw_deposit.cob
 	$(COBC) $(COBCFLAGS) -o $@ $<
 
 $(BIN_DIR)/transaction-history: $(SRC_DIR)/transaction_history.cob
+	@mkdir -p $(BIN_DIR) $(DATA_DIR)
+	$(COBC) $(COBCFLAGS) -o $@ $<
+
+$(BIN_DIR)/close-account: $(SRC_DIR)/close_account.cob
 	@mkdir -p $(BIN_DIR) $(DATA_DIR)
 	$(COBC) $(COBCFLAGS) -o $@ $<
 
@@ -50,8 +54,8 @@ reset: $(BIN_DIR)/reset-data
 create-user: $(BIN_DIR)/create-user
 	./$(BIN_DIR)/create-user
 
-create-account: $(BIN_DIR)/create-account
-	./$(BIN_DIR)/create-account
+open-account: $(BIN_DIR)/open-account
+	./$(BIN_DIR)/open-account
 
 account-inquiry: $(BIN_DIR)/account-inquiry
 	./$(BIN_DIR)/account-inquiry
@@ -61,6 +65,9 @@ withdraw-deposit: $(BIN_DIR)/withdraw-deposit
 
 transaction-history: $(BIN_DIR)/transaction-history
 	./$(BIN_DIR)/transaction-history
+
+close-account: $(BIN_DIR)/close-account
+	./$(BIN_DIR)/close-account
 
 menu: build reset
 	./$(BIN_DIR)/bank-menu

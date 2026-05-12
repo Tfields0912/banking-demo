@@ -25,10 +25,14 @@
        01 NEW-USER-NAME PIC X(40).
        01 NEW-USER-ADDRESS PIC X(80).
        01 NEW-USER-CITY PIC X(40).
+       01 NEW-USER-STATE-ENTRY PIC X(20).
        01 NEW-USER-STATE PIC X(2).
        01 NEW-USER-ZIPCODE PIC X(5).
+       01 NEW-USER-ZIPCODE-ENTRY PIC X(20).
        01 NEW-USER-DOB PIC X(10).
+       01 NEW-USER-DOB-ENTRY PIC X(20).
        01 NEW-USER-PHONE PIC X(12).
+       01 NEW-USER-PHONE-ENTRY PIC X(20).
 
        01 USER-ID PIC X(10).
 
@@ -43,29 +47,172 @@
            DISPLAY "----------------"
            DISPLAY "ID: " WITH NO ADVANCING
            ACCEPT NEW-USER-ID
+           MOVE FUNCTION TRIM(NEW-USER-ID) TO NEW-USER-ID
+
+           IF NEW-USER-ID = SPACES
+              DISPLAY "ID IS REQUIRED."
+              STOP RUN
+           END-IF
+
+           IF NEW-USER-ID(1:1) NOT = "U"
+              DISPLAY "ID MUST START WITH U (EX: U100)."
+              STOP RUN
+           END-IF
+
+           IF NEW-USER-ID(2:1) = SPACE
+              DISPLAY "ID MUST BE AT LEAST 2 CHARACTERS."
+              STOP RUN
+           END-IF
 
            DISPLAY "NAME: " WITH NO ADVANCING
            ACCEPT NEW-USER-NAME
+           MOVE FUNCTION TRIM(NEW-USER-NAME) TO NEW-USER-NAME
+
+           IF NEW-USER-NAME = SPACES
+              DISPLAY "NAME IS REQUIRED."
+              STOP RUN
+           END-IF
+
+           IF NEW-USER-NAME IS NOT ALPHABETIC
+              DISPLAY "NAME CANNOT HAVE NUMBERS."
+              STOP RUN
+           END-IF
 
            DISPLAY "ADDRESS: " WITH NO ADVANCING
            ACCEPT NEW-USER-ADDRESS
+           MOVE FUNCTION TRIM(NEW-USER-ADDRESS) TO NEW-USER-ADDRESS
+
+           IF NEW-USER-ADDRESS = SPACES
+              DISPLAY "ADDRESS IS REQUIRED."
+              STOP RUN
+           END-IF
+
+           IF FUNCTION TEST-NUMVAL(NEW-USER-ADDRESS) = 0
+              DISPLAY "ADDRESS CANNOT BE ONLY NUMBERS."
+              STOP RUN
+           END-IF
 
            DISPLAY "CITY: " WITH NO ADVANCING
            ACCEPT NEW-USER-CITY
+           MOVE FUNCTION TRIM(NEW-USER-CITY) TO NEW-USER-CITY
+
+           IF NEW-USER-CITY = SPACES
+              DISPLAY "CITY IS REQUIRED."
+              STOP RUN
+           END-IF
+
+           IF NEW-USER-CITY IS NOT ALPHABETIC
+              DISPLAY "CITY CANNOT HAVE NUMBERS."
+              STOP RUN
+           END-IF
 
            DISPLAY "STATE: " WITH NO ADVANCING
-           ACCEPT NEW-USER-STATE
+           ACCEPT NEW-USER-STATE-ENTRY
+           MOVE FUNCTION TRIM(NEW-USER-STATE-ENTRY) 
+              TO NEW-USER-STATE-ENTRY
+
+           IF NEW-USER-STATE-ENTRY = SPACES
+              DISPLAY "STATE IS REQUIRED."
+              STOP RUN
+           END-IF
+
+           IF NEW-USER-STATE-ENTRY(1:2) IS NOT ALPHABETIC
+              DISPLAY "STATE CANNOT HAVE NUMBERS."
+              STOP RUN
+           END-IF
+
+           IF NEW-USER-STATE-ENTRY(2:1) = SPACE
+              OR NEW-USER-STATE-ENTRY(3:1) NOT = SPACE
+              DISPLAY "STATE MUST BE EXACTLY 2 CHARACTERS."
+              STOP RUN
+           END-IF
+
+           MOVE NEW-USER-STATE-ENTRY(1:2) TO NEW-USER-STATE
 
            DISPLAY "ZIPCODE: " WITH NO ADVANCING
-           ACCEPT NEW-USER-ZIPCODE
+           ACCEPT NEW-USER-ZIPCODE-ENTRY
+           MOVE FUNCTION TRIM(NEW-USER-ZIPCODE-ENTRY)
+              TO NEW-USER-ZIPCODE-ENTRY
+
+           IF NEW-USER-ZIPCODE-ENTRY = SPACES
+              DISPLAY "ZIPCODE IS REQUIRED."
+              STOP RUN
+           END-IF
+
+           IF NEW-USER-ZIPCODE-ENTRY(5:1) = SPACE
+              OR NEW-USER-ZIPCODE-ENTRY(6:1) NOT = SPACE
+              DISPLAY "ZIPCODE MUST BE EXACTLY 5 DIGITS."
+              STOP RUN
+           END-IF
+
+           IF NEW-USER-ZIPCODE-ENTRY(1:5) IS NOT NUMERIC
+              DISPLAY "ZIPCODE CAN BE ONLY NUMBERS."
+              STOP RUN
+           END-IF
+
+           MOVE NEW-USER-ZIPCODE-ENTRY(1:5) TO NEW-USER-ZIPCODE
 
            DISPLAY "DOB (MM-DD-YYYY): " WITH NO ADVANCING
-           ACCEPT NEW-USER-DOB
+           ACCEPT NEW-USER-DOB-ENTRY
+           MOVE FUNCTION TRIM(NEW-USER-DOB-ENTRY)
+              TO NEW-USER-DOB-ENTRY
+
+           IF NEW-USER-DOB-ENTRY = SPACES
+              DISPLAY "DATE OF BIRTH IS REQUIRED."
+              STOP RUN
+           END-IF
+
+           IF NEW-USER-DOB-ENTRY(10:1) = SPACE
+              OR NEW-USER-DOB-ENTRY(11:1) NOT = SPACE
+              DISPLAY "DATE OF BIRTH MUST BE MM-DD-YYYY."
+              STOP RUN
+           END-IF
+
+           IF NEW-USER-DOB-ENTRY(3:1) NOT = "-"
+              OR NEW-USER-DOB-ENTRY(6:1) NOT = "-"
+              DISPLAY "DATE OF BIRTH MUST BE MM-DD-YYYY."
+              STOP RUN
+           END-IF
+
+           IF NEW-USER-DOB-ENTRY(1:2) IS NOT NUMERIC
+              OR NEW-USER-DOB-ENTRY(4:2) IS NOT NUMERIC
+              OR NEW-USER-DOB-ENTRY(7:4) IS NOT NUMERIC
+              DISPLAY "DATE OF BIRTH MUST BE MM-DD-YYYY."
+              STOP RUN
+           END-IF
+
+           MOVE NEW-USER-DOB-ENTRY(1:10) TO NEW-USER-DOB
 
            DISPLAY "PHONE NUMBER (XXX-XXX-XXXX): " WITH NO ADVANCING
-           ACCEPT NEW-USER-PHONE
+           ACCEPT NEW-USER-PHONE-ENTRY
+           MOVE FUNCTION TRIM(NEW-USER-PHONE-ENTRY)
+              TO NEW-USER-PHONE-ENTRY
 
-           PERFORM VALIDATE-INPUT
+           IF NEW-USER-PHONE-ENTRY = SPACES
+              DISPLAY "PHONE NUMBER IS REQUIRED."
+              STOP RUN
+           END-IF
+
+           IF NEW-USER-PHONE-ENTRY(12:1) = SPACE
+              OR NEW-USER-PHONE-ENTRY(13:1) NOT = SPACE
+              DISPLAY "PHONE NUMBER MUST BE XXX-XXX-XXXX."
+              STOP RUN
+           END-IF
+
+           IF NEW-USER-PHONE-ENTRY(4:1) NOT = "-"
+              OR NEW-USER-PHONE-ENTRY(8:1) NOT = "-"
+              DISPLAY "PHONE NUMBER MUST BE XXX-XXX-XXXX."
+              STOP RUN
+           END-IF
+
+           IF NEW-USER-PHONE-ENTRY(1:3) IS NOT NUMERIC
+              OR NEW-USER-PHONE-ENTRY(5:3) IS NOT NUMERIC
+              OR NEW-USER-PHONE-ENTRY(9:4) IS NOT NUMERIC
+              DISPLAY "PHONE NUMBER MUST BE XXX-XXX-XXXX."
+              STOP RUN
+           END-IF
+
+           MOVE NEW-USER-PHONE-ENTRY(1:12) TO NEW-USER-PHONE
 
            PERFORM CREATE-USER-RECORD
 
@@ -108,56 +255,6 @@
            MOVE "mv -f data/users.tmp data/users.dat" TO SYSTEM-COMMAND
            CALL "SYSTEM" USING SYSTEM-COMMAND.
 
-       VALIDATE-INPUT.
-           MOVE FUNCTION TRIM(NEW-USER-ID) TO NEW-USER-ID
-           MOVE FUNCTION TRIM(NEW-USER-NAME) TO NEW-USER-NAME
-           MOVE FUNCTION TRIM(NEW-USER-ADDRESS) TO NEW-USER-ADDRESS
-           MOVE FUNCTION TRIM(NEW-USER-CITY) TO NEW-USER-CITY
-           MOVE FUNCTION TRIM(NEW-USER-STATE) TO NEW-USER-STATE
-           MOVE FUNCTION TRIM(NEW-USER-ZIPCODE) TO NEW-USER-ZIPCODE
-           MOVE FUNCTION TRIM(NEW-USER-DOB) TO NEW-USER-DOB
-           MOVE FUNCTION TRIM(NEW-USER-PHONE) TO NEW-USER-PHONE
-
-           IF NEW-USER-ID = SPACES
-              DISPLAY "ID IS REQUIRED."
-              STOP RUN
-           END-IF
-
-           IF NEW-USER-NAME = SPACES
-              DISPLAY "NAME IS REQUIRED."
-              STOP RUN
-           END-IF
-
-           IF NEW-USER-ADDRESS = SPACES
-              DISPLAY "ADDRESS IS REQUIRED."
-              STOP RUN
-           END-IF
-
-           IF NEW-USER-CITY = SPACES
-              DISPLAY "CITY IS REQUIRED."
-              STOP RUN
-           END-IF
-
-           IF NEW-USER-STATE = SPACES
-              DISPLAY "STATE IS REQUIRED."
-              STOP RUN
-           END-IF
-
-           IF NEW-USER-ZIPCODE = SPACES
-              DISPLAY "ZIPCODE IS REQUIRED."
-              STOP RUN
-           END-IF
-
-           IF NEW-USER-DOB = SPACES
-              DISPLAY "DATE OF BIRTH IS REQUIRED."
-              STOP RUN
-           END-IF
-
-           IF NEW-USER-PHONE = SPACES
-              DISPLAY "PHONE NUMBER IS REQUIRED."
-              STOP RUN
-           END-IF.
-
        BUILD-USER-OUT-RECORD.
            MOVE SPACES TO USERS-OUT-RECORD
            STRING
@@ -178,4 +275,3 @@
            FUNCTION TRIM(NEW-USER-PHONE) DELIMITED BY SIZE
            INTO USERS-OUT-RECORD
            END-STRING.
-           

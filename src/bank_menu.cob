@@ -15,7 +15,7 @@
               DISPLAY SPACE
               DISPLAY "1) RESET DATA"
               DISPLAY "2) CREATE USER"
-              DISPLAY "3) CREATE ACCOUNT"
+              DISPLAY "3) OPEN ACCOUNT"
               DISPLAY "4) ACCOUNT INQUIRY"
               DISPLAY "5) WITHDRAW/DEPOSIT"
               DISPLAY "6) CLOSE ACCOUNT"
@@ -33,7 +33,7 @@
                     MOVE "./bin/create-user" TO SYSTEM-COMMAND
                     CALL "SYSTEM" USING SYSTEM-COMMAND
                  WHEN "3"
-                    MOVE "./bin/create-account" TO SYSTEM-COMMAND
+                    MOVE "./bin/open-account" TO SYSTEM-COMMAND
                     CALL "SYSTEM" USING SYSTEM-COMMAND
                  WHEN "4"
                     MOVE "./bin/account-inquiry" TO SYSTEM-COMMAND
@@ -42,7 +42,8 @@
                     MOVE "./bin/withdraw-deposit" TO SYSTEM-COMMAND
                     CALL "SYSTEM" USING SYSTEM-COMMAND
                  WHEN "6"
-                    DISPLAY "NEED TO ADD"
+                    MOVE "./bin/close-account" TO SYSTEM-COMMAND
+                    CALL "SYSTEM" USING SYSTEM-COMMAND
                  WHEN "7"
                     MOVE "Y" TO DONE-FLAG
                  WHEN OTHER
