@@ -14,37 +14,58 @@
        DATA DIVISION.
        FILE SECTION.
        FD ACCOUNTS-IN.
-       01 ACCOUNTS-IN-RECORD PIC X(120).
+       01 ACCOUNTS-IN-RECORD.
+           05 AI-ACCOUNT-ID  PIC X(10).
+           05 AI-USER-ID     PIC X(10).
+           05 AI-BALANCE     PIC 9(9)V99.
+           05 AI-STATUS      PIC X(8).
+           05 AI-TYPE        PIC X(8).
+           05 AI-PAD         PIC X(3).
 
        FD ACCOUNTS-OUT.
-       01 ACCOUNTS-OUT-RECORD PIC X(120).
+       01 ACCOUNTS-OUT-RECORD.
+           05 AO-ACCOUNT-ID  PIC X(10).
+           05 AO-USER-ID     PIC X(10).
+           05 AO-BALANCE     PIC 9(9)V99.
+           05 AO-STATUS      PIC X(8).
+           05 AO-TYPE        PIC X(8).
+           05 AO-PAD         PIC X(3).
 
        FD TRANSACTIONS-FILE.
-       01 TRANSACTIONS-RECORD PIC X(160).
+       01 TRANSACTIONS-RECORD.
+           05 TR-TIMESTAMP    PIC X(15).
+           05 TR-ACCOUNT-ID   PIC X(10).
+           05 TR-TYPE         PIC X(1).
+           05 TR-AMOUNT       PIC 9(9)V99.
+           05 TR-NEW-BALANCE  PIC 9(9)V99.
+           05 TR-DESCRIPTION  PIC X(40).
+           05 TR-PAD          PIC X(12).
 
        WORKING-STORAGE SECTION.
-       01 EOF-FLAG PIC X VALUE "N".
-       01 FOUND-FLAG PIC X VALUE "N".
-       01 NOT-ZERO-FLAG PIC X VALUE "N".
-       01 ALREADY-CLOSED-FLAG PIC X VALUE "N".
-       01 INVALID-ENTRY-FLAG PIC X VALUE "N".
+       01 CONTROL-FLAGS.
+           05 EOF-FLAG PIC X VALUE "N".
+           05 FOUND-FLAG PIC X VALUE "N".
+           05 NOT-ZERO-FLAG PIC X VALUE "N".
+           05 ALREADY-CLOSED-FLAG PIC X VALUE "N".
+           05 INVALID-ENTRY-FLAG PIC X VALUE "N".
 
-       01 TARGET-ID PIC X(10).
+       01 INPUT-FIELDS.
+           05 TARGET-ID PIC X(10).
 
-       01 ACCOUNT-ID PIC X(10).
-       01 USER-ID PIC X(10).
-       01 BALANCE-STR PIC X(12).
-       01 STATUS-STR PIC X(10).
-       01 ACCOUNT-TYPE-STR PIC X(10).
-       01 BALANCE-NUM PIC S9(9)V99 VALUE 0.
-       01 BALANCE-OUT PIC Z(9)9.99.
+       01 RECORD-FIELDS.
+           05 ACCOUNT-ID     PIC X(10).
+           05 USER-ID        PIC X(10).
+           05 BALANCE-NUM    PIC S9(9)V99 VALUE 0.
+           05 BALANCE-OUT    PIC Z(9)9.99.
 
-       01 DATE-YYYYMMDD PIC X(8).
-       01 TIME-HHMMSSCC PIC X(8).
-       01 CLOSE-TRANS-DESC PIC X(40).
-       01 CLOSE-TRANS-TYPE PIC X.
+       01 WORK-FIELDS.
+           05 DATE-YYYYMMDD PIC X(8).
+           05 TIME-HHMMSSCC PIC X(8).
+           05 CLOSE-TRANS-DESC PIC X(40).
+           05 CLOSE-TRANS-TYPE PIC X.
 
-       01 SYSTEM-COMMAND PIC X(200).
+       01 SYSTEM-FIELDS.
+           05 SYSTEM-COMMAND PIC X(200).
 
        PROCEDURE DIVISION.
        MAIN.
@@ -52,10 +73,10 @@
            ACCEPT TARGET-ID
            MOVE FUNCTION TRIM(TARGET-ID) TO TARGET-ID
 
-            IF TARGET-ID = SPACES
+           IF TARGET-ID = SPACES
               DISPLAY "ACCOUNT ID IS REQUIRED."
               STOP RUN
-            END-IF
+           END-IF
 
            OPEN INPUT ACCOUNTS-IN
            OPEN OUTPUT ACCOUNTS-OUT
@@ -99,18 +120,13 @@
                  DATE-YYYYMMDD DELIMITED BY SIZE
                  "-" DELIMITED BY SIZE
                  TIME-HHMMSSCC(1:6) DELIMITED BY SIZE
-                 "," DELIMITED BY SIZE
-                 FUNCTION TRIM(TARGET-ID) DELIMITED BY SIZE
-                 "," DELIMITED BY SIZE
-                 CLOSE-TRANS-TYPE DELIMITED BY SIZE
-                 "," DELIMITED BY SIZE
-                 "0.00" DELIMITED BY SIZE
-                 "," DELIMITED BY SIZE
-                 "0.00" DELIMITED BY SIZE
-                 "," DELIMITED BY SIZE
-                 FUNCTION TRIM(CLOSE-TRANS-DESC) DELIMITED BY SIZE
-                 INTO TRANSACTIONS-RECORD
+                 INTO TR-TIMESTAMP
                  END-STRING
+                 MOVE FUNCTION TRIM(TARGET-ID) TO TR-ACCOUNT-ID
+                 MOVE CLOSE-TRANS-TYPE TO TR-TYPE
+                 MOVE ZERO TO TR-AMOUNT
+                 MOVE ZERO TO TR-NEW-BALANCE
+                 MOVE CLOSE-TRANS-DESC TO TR-DESCRIPTION
                  WRITE TRANSACTIONS-RECORD
                  CLOSE TRANSACTIONS-FILE
                  DISPLAY "ACCOUNT CLOSED."
@@ -124,47 +140,33 @@
            STOP RUN.
 
        PROCESS-ACCOUNT.
-           MOVE SPACES TO ACCOUNT-ID USER-ID BALANCE-STR STATUS-STR
-              ACCOUNT-TYPE-STR
-           UNSTRING ACCOUNTS-IN-RECORD DELIMITED BY ","
-           INTO ACCOUNT-ID USER-ID BALANCE-STR STATUS-STR
-              ACCOUNT-TYPE-STR
-           END-UNSTRING
-
-           IF FUNCTION TRIM(ACCOUNT-ID) = TARGET-ID
+           IF AI-ACCOUNT-ID = TARGET-ID
               MOVE "Y" TO FOUND-FLAG
+              MOVE AI-ACCOUNT-ID TO ACCOUNT-ID
+              MOVE AI-USER-ID TO USER-ID
 
-              IF FUNCTION TEST-NUMVAL(BALANCE-STR) NOT = 0
+              IF AI-STATUS NOT = "OPEN" AND AI-STATUS NOT = "CLOSED"
                  MOVE "Y" TO INVALID-ENTRY-FLAG
                  MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
                  WRITE ACCOUNTS-OUT-RECORD
                  EXIT PARAGRAPH
               END-IF
 
-              IF FUNCTION TRIM(STATUS-STR) NOT = "OPEN"
-                 AND FUNCTION TRIM(STATUS-STR) NOT = "CLOSED"
+              IF AI-TYPE NOT = "CHECKING" AND AI-TYPE NOT = "SAVINGS"
                  MOVE "Y" TO INVALID-ENTRY-FLAG
                  MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
                  WRITE ACCOUNTS-OUT-RECORD
                  EXIT PARAGRAPH
               END-IF
 
-              IF FUNCTION TRIM(ACCOUNT-TYPE-STR) NOT = "CHECKING"
-                 AND FUNCTION TRIM(ACCOUNT-TYPE-STR) NOT = "SAVINGS"
-                 MOVE "Y" TO INVALID-ENTRY-FLAG
-                 MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
-                 WRITE ACCOUNTS-OUT-RECORD
-                 EXIT PARAGRAPH
-              END-IF
-
-              IF FUNCTION TRIM(STATUS-STR) = "CLOSED"
+              IF AI-STATUS = "CLOSED"
                  MOVE "Y" TO ALREADY-CLOSED-FLAG
                  MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
                  WRITE ACCOUNTS-OUT-RECORD
                  EXIT PARAGRAPH
               END-IF
 
-              MOVE FUNCTION NUMVAL(BALANCE-STR) TO BALANCE-NUM
+              MOVE AI-BALANCE TO BALANCE-NUM
               IF BALANCE-NUM NOT = 0
                  MOVE "Y" TO NOT-ZERO-FLAG
                  MOVE ACCOUNTS-IN-RECORD TO ACCOUNTS-OUT-RECORD
@@ -172,18 +174,11 @@
               ELSE
                  MOVE BALANCE-NUM TO BALANCE-OUT
                  MOVE SPACES TO ACCOUNTS-OUT-RECORD
-                 STRING
-                 FUNCTION TRIM(ACCOUNT-ID) DELIMITED BY SIZE
-                 "," DELIMITED BY SIZE
-                 FUNCTION TRIM(USER-ID) DELIMITED BY SIZE
-                 "," DELIMITED BY SIZE
-                 FUNCTION TRIM(BALANCE-OUT) DELIMITED BY SIZE
-                 "," DELIMITED BY SIZE
-                 "CLOSED" DELIMITED BY SIZE
-                 "," DELIMITED BY SIZE
-                 FUNCTION TRIM(ACCOUNT-TYPE-STR) DELIMITED BY SIZE
-                 INTO ACCOUNTS-OUT-RECORD
-                 END-STRING
+                 MOVE ACCOUNT-ID TO AO-ACCOUNT-ID
+                 MOVE USER-ID TO AO-USER-ID
+                 MOVE BALANCE-NUM TO AO-BALANCE
+                 MOVE "CLOSED" TO AO-STATUS
+                 MOVE AI-TYPE TO AO-TYPE
                  WRITE ACCOUNTS-OUT-RECORD
               END-IF
            ELSE

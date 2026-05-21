@@ -12,31 +12,53 @@
        DATA DIVISION.
        FILE SECTION.
        FD USERS-IN.
-       01 USERS-IN-RECORD PIC X(200).
+       01 USERS-IN-RECORD.
+           05 UI-USER-ID    PIC X(10).
+           05 UI-NAME       PIC X(40).
+           05 UI-ADDRESS    PIC X(80).
+           05 UI-CITY       PIC X(40).
+           05 UI-STATE      PIC X(2).
+           05 UI-ZIPCODE    PIC X(5).
+           05 UI-DOB        PIC X(10).
+           05 UI-PHONE      PIC X(12).
+           05 UI-PAD        PIC X(1).
 
        FD USERS-OUT.
-       01 USERS-OUT-RECORD PIC X(200).
+       01 USERS-OUT-RECORD.
+           05 UO-USER-ID    PIC X(10).
+           05 UO-NAME       PIC X(40).
+           05 UO-ADDRESS    PIC X(80).
+           05 UO-CITY       PIC X(40).
+           05 UO-STATE      PIC X(2).
+           05 UO-ZIPCODE    PIC X(5).
+           05 UO-DOB        PIC X(10).
+           05 UO-PHONE      PIC X(12).
+           05 UO-PAD        PIC X(1).
 
        WORKING-STORAGE SECTION.
-       01 USERS-EOF-FLAG PIC X VALUE "N".
-       01 USER-EXISTS-FLAG PIC X VALUE "N".
+       01 CONTROL-FLAGS.
+           05 USERS-EOF-FLAG PIC X VALUE "N".
+           05 USER-EXISTS-FLAG PIC X VALUE "N".
 
-       01 NEW-USER-ID PIC X(10).
-       01 NEW-USER-NAME PIC X(40).
-       01 NEW-USER-ADDRESS PIC X(80).
-       01 NEW-USER-CITY PIC X(40).
-       01 NEW-USER-STATE-ENTRY PIC X(20).
-       01 NEW-USER-STATE PIC X(2).
-       01 NEW-USER-ZIPCODE PIC X(5).
-       01 NEW-USER-ZIPCODE-ENTRY PIC X(20).
-       01 NEW-USER-DOB PIC X(10).
-       01 NEW-USER-DOB-ENTRY PIC X(20).
-       01 NEW-USER-PHONE PIC X(12).
-       01 NEW-USER-PHONE-ENTRY PIC X(20).
+       01 INPUT-FIELDS.
+           05 NEW-USER-ID PIC X(10).
+           05 NEW-USER-NAME PIC X(40).
+           05 NEW-USER-ADDRESS PIC X(80).
+           05 NEW-USER-CITY PIC X(40).
+           05 NEW-USER-STATE-ENTRY PIC X(20).
+           05 NEW-USER-STATE PIC X(2).
+           05 NEW-USER-ZIPCODE PIC X(5).
+           05 NEW-USER-ZIPCODE-ENTRY PIC X(20).
+           05 NEW-USER-DOB PIC X(10).
+           05 NEW-USER-DOB-ENTRY PIC X(20).
+           05 NEW-USER-PHONE PIC X(12).
+           05 NEW-USER-PHONE-ENTRY PIC X(20).
 
-       01 USER-ID PIC X(10).
+       01 RECORD-FIELDS.
+           05 USER-ID PIC X(10).
 
-       01 SYSTEM-COMMAND PIC X(200).
+       01 SYSTEM-FIELDS.
+           05 SYSTEM-COMMAND PIC X(200).
 
        PROCEDURE DIVISION.
        MAIN.
@@ -233,10 +255,7 @@
            AT END
               MOVE "Y" TO USERS-EOF-FLAG
            NOT AT END
-              UNSTRING USERS-IN-RECORD DELIMITED BY ","
-              INTO USER-ID
-              END-UNSTRING
-              IF FUNCTION TRIM(USER-ID) = NEW-USER-ID
+              IF UI-USER-ID = NEW-USER-ID
                  MOVE "Y" TO USER-EXISTS-FLAG
               END-IF
               MOVE USERS-IN-RECORD TO USERS-OUT-RECORD
@@ -257,21 +276,11 @@
 
        BUILD-USER-OUT-RECORD.
            MOVE SPACES TO USERS-OUT-RECORD
-           STRING
-           FUNCTION TRIM(NEW-USER-ID) DELIMITED BY SIZE
-           "," DELIMITED BY SIZE
-           FUNCTION TRIM(NEW-USER-NAME) DELIMITED BY SIZE
-           "," DELIMITED BY SIZE
-           FUNCTION TRIM(NEW-USER-ADDRESS) DELIMITED BY SIZE
-           "," DELIMITED BY SIZE
-           FUNCTION TRIM(NEW-USER-CITY) DELIMITED BY SIZE
-           "," DELIMITED BY SIZE
-           FUNCTION TRIM(NEW-USER-STATE) DELIMITED BY SIZE
-           "," DELIMITED BY SIZE
-           FUNCTION TRIM(NEW-USER-ZIPCODE) DELIMITED BY SIZE
-           "," DELIMITED BY SIZE
-           FUNCTION TRIM(NEW-USER-DOB) DELIMITED BY SIZE
-           "," DELIMITED BY SIZE
-           FUNCTION TRIM(NEW-USER-PHONE) DELIMITED BY SIZE
-           INTO USERS-OUT-RECORD
-           END-STRING.
+           MOVE NEW-USER-ID      TO UO-USER-ID
+           MOVE NEW-USER-NAME    TO UO-NAME
+           MOVE NEW-USER-ADDRESS TO UO-ADDRESS
+           MOVE NEW-USER-CITY    TO UO-CITY
+           MOVE NEW-USER-STATE   TO UO-STATE
+           MOVE NEW-USER-ZIPCODE TO UO-ZIPCODE
+           MOVE NEW-USER-DOB     TO UO-DOB
+           MOVE NEW-USER-PHONE   TO UO-PHONE.
